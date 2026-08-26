@@ -23,25 +23,30 @@
 #include "Search.h"
 
 namespace dungeon {
-
+    // TODO Floor 1 (Mon): walk every entry; return its address when name matches.
+   //                     If you reach the end without a match, return nullptr.
+   //
+   // Think before you type:
+   //   - You return `const Monster*` (a pointer into the vector), NOT
+   //     `Monster` (a copy). Why a pointer? What would you even return
+   //     from a "copy" version when the name is not found?
+   //   - In the range-for loop, `for (auto m : bestiary)` makes a COPY
+   //     of each monster each iteration. `for (const auto& m : bestiary)`
+   //     does not. Which do you want — and why does the difference matter
+   //     more for a `Monster` than for an `int`?
+   //   - How do you take the address of the element you're looking at?
+   //     (Two common idioms. Pick whichever makes your loop read cleanly.)
 const Monster* linearSearch(const std::vector<Monster>& bestiary,
                             const std::string&         name) {
-    // TODO Floor 1 (Mon): walk every entry; return its address when name matches.
-    //                     If you reach the end without a match, return nullptr.
-    //
-    // Think before you type:
-    //   - You return `const Monster*` (a pointer into the vector), NOT
-    //     `Monster` (a copy). Why a pointer? What would you even return
-    //     from a "copy" version when the name is not found?
-    //   - In the range-for loop, `for (auto m : bestiary)` makes a COPY
-    //     of each monster each iteration. `for (const auto& m : bestiary)`
-    //     does not. Which do you want — and why does the difference matter
-    //     more for a `Monster` than for an `int`?
-    //   - How do you take the address of the element you're looking at?
-    //     (Two common idioms. Pick whichever makes your loop read cleanly.)
-    (void)bestiary;
-    (void)name;
-    return nullptr;
+
+    for (const auto& m : bestiary) {
+        if (m.name == name) return &m;
+        // == byte-for-byte equaliry;
+        // here & is address-of operator
+        // since m is a reference int o a vector 
+        // &m is a pointer to that slot in the vector (returning the address of the monster;
+    }
+    return nullptr; // c++ typed null pointer for if the monster is not found
 }
 
 const Monster* binarySearch(const std::vector<Monster>& bestiary,
@@ -65,8 +70,20 @@ const Monster* binarySearch(const std::vector<Monster>& bestiary,
     //   - Middle index: `(low + high) / 2` is textbook but can overflow for
     //     huge N. `low + (high - low) / 2` is the safe version. Write the
     //     safe one — it's free, and it's a habit worth building.
-    (void)bestiary;
-    (void)name;
+    std::size_t mid = 0, low = 0, high = bestiary.size() ;
+    while (low < high) {
+        mid = low + (high - low) / 2;
+        std::string currentName = bestiary[mid].name;
+        if (currentName == name) {
+            return &bestiary[mid];
+        }
+        else if (currentName < name) {
+            low = mid + 1;
+        }
+        else {
+            high = mid;
+        }
+    }
     return nullptr;
 }
 
@@ -105,7 +122,7 @@ const Monster* findMonster(const std::vector<Monster>& bestiary,
     //   - At N=100,000, does it matter? By how much?
     //   - This is a JUDGMENT, not a fact. Whatever you pick, write WHY in
     //     your commit message. That reasoning is the graded artifact.
-    return linearSearch(bestiary, name);
+    return binarySearch(bestiary, name);
 }
 
 }
