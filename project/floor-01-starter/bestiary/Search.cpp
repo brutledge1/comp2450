@@ -21,6 +21,8 @@
 //               the output for your lab-notes.md.
 
 #include "Search.h"
+#include <cassert> 
+#include <algorithm>
 
 namespace dungeon {
     // TODO Floor 1 (Mon): walk every entry; return its address when name matches.
@@ -70,6 +72,9 @@ const Monster* binarySearch(const std::vector<Monster>& bestiary,
     //   - Middle index: `(low + high) / 2` is textbook but can overflow for
     //     huge N. `low + (high - low) / 2` is the safe version. Write the
     //     safe one — it's free, and it's a habit worth building.
+    
+    assert(std::is_sorted(bestiary.begin(), bestiary.end(), [](const Monster& a, const Monster& b) {return a.name < b.name; }));
+    
     std::size_t mid = 0, low = 0, high = bestiary.size() ;
     while (low < high) {
         mid = low + (high - low) / 2;
@@ -85,6 +90,28 @@ const Monster* binarySearch(const std::vector<Monster>& bestiary,
         }
     }
     return nullptr;
+}
+namespace {
+    const Monster* binSearchRec(
+        const std::vector<Monster>& bestiary,
+        const std::string& name,
+        std::size_t low,
+        std::size_t high
+    ) {
+        //base case first
+        if (low >= high) return nullptr;
+
+        //recursive case
+        std::size_t mid = low + (high - low) / 2;
+        const std::string& here = bestiary[mid].name;
+        if (here == name) return &bestiary[mid];
+        else if (here < name) {
+            return binSearchRec(bestiary, name, mid + 1, high);
+        }
+        else {
+            return binSearchRec(bestiary, name, low, mid);
+        }
+     }
 }
 
 const Monster* binarySearchRecursive(const std::vector<Monster>& bestiary,
@@ -107,8 +134,10 @@ const Monster* binarySearchRecursive(const std::vector<Monster>& bestiary,
     //   - After it works: run `benchmark`. Does the recursive version cost
     //     more per call than the iterative one? A little? A lot? Why might
     //     that be? Write the answer in lab-notes.md.
-    (void)bestiary;
-    (void)name;
+    
+    return binSearchRec(bestiary, name, 0, bestiary.size());
+
+
     return nullptr;
 }
 
@@ -122,7 +151,7 @@ const Monster* findMonster(const std::vector<Monster>& bestiary,
     //   - At N=100,000, does it matter? By how much?
     //   - This is a JUDGMENT, not a fact. Whatever you pick, write WHY in
     //     your commit message. That reasoning is the graded artifact.
-    return binarySearch(bestiary, name);
+    return binarySearchRecursive(bestiary, name);
 }
 
 }
