@@ -52,45 +52,19 @@ const Monster* linearSearch(const std::vector<Monster>& bestiary,
 }
 
 const Monster* binarySearch(const std::vector<Monster>& bestiary,
-                            const std::string&         name) {
-    // TODO Floor 1 (Wed): iterative binary search.
-    //   PRECONDITION: bestiary is sorted ascending by name.
-    //
-    // Think before you type:
-    //   - Decide your invariant FIRST, then write code: does `high` mean
-    //     "the last valid index" (closed range, [low, high]) or "one past
-    //     the last valid index" (half-open, [low, high))? Pick one. Every
-    //     off-by-one bug starts with mixing the two.
-    //   - `std::size_t` is UNSIGNED. If your search range shrinks to empty
-    //     and you compute `high - 1`, does that value wrap around to a
-    //     huge number? Try in your head: what happens on `search Aardvark`
-    //     when Aardvark comes before every monster? Does your loop end?
-    //   - A name comparison has THREE outcomes: equal, less, greater. Each
-    //     goes in a different direction. If you collapse two branches into
-    //     one (e.g., an `if/else` instead of three cases), you've probably
-    //     broken binary search. Write all three explicitly.
-    //   - Middle index: `(low + high) / 2` is textbook but can overflow for
-    //     huge N. `low + (high - low) / 2` is the safe version. Write the
-    //     safe one — it's free, and it's a habit worth building.
-    
-    assert(std::is_sorted(bestiary.begin(), bestiary.end(), [](const Monster& a, const Monster& b) {return a.name < b.name; }));
-    
-    std::size_t mid = 0, low = 0, high = bestiary.size() ;
+    const std::string& name) {
+    std::size_t low = 0;
+    std::size_t high = bestiary.size();
     while (low < high) {
-        mid = low + (high - low) / 2;
-        std::string currentName = bestiary[mid].name;
-        if (currentName == name) {
-            return &bestiary[mid];
-        }
-        else if (currentName < name) {
-            low = mid + 1;
-        }
-        else {
-            high = mid;
-        }
+        std::size_t mid = low + (high - low) / 2;
+        const std::string& here = bestiary[mid].name;
+        if (here == name) return &bestiary[mid];
+        if (here < name) low = mid + 1;
+        else              high = mid;
     }
     return nullptr;
 }
+
 namespace {
     const Monster* binSearchRec(
         const std::vector<Monster>& bestiary,
