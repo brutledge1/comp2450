@@ -24,7 +24,7 @@
 
 #include "Sort.h"
 #include <algorithm>  // you will want std::sort in sortInventory
-
+#include <sstream>
 
 
 
@@ -77,6 +77,66 @@ namespace dungeon {
             mergeSortImpl(v, mid, high, cmp);
             merge(v, low, mid, high, cmp);
         }
+
+        std::size_t partition(std::vector<Item>& v, std::size_t lo, std::size_t hi, const Comparator& cmp) {
+            // high is out last index (inclusive)
+            // 1.) Pick the pivot
+            std::size_t mid = lo + (hi - lo) / 2;
+            std::swap(v[mid], v[hi]);
+            const Item pivot = v[hi];
+            //compute middle index
+            //std::swap exchanges two items w/o copying the whole struct
+            //in Lomuto, assumes the pivot lives at high, so by moving out pivot there we can follow classic Lomuto
+
+            //lomuto scan
+            std::size_t store = lo;
+            for (std::size_t i = lo; i < hi; ++i) {
+                if (cmp(v[i], pivot)) {
+                    std::swap(v[store], v[i]);
+                    ++store;
+                }
+            }
+            std::swap(v[store], v[hi]);
+            return store;
+        }
+
+        void quickSortImpl(std::vector<Item>& v, std::size_t lo, std::size_t hi, const Comparator& cmp) {
+            //base case
+            if (lo >= hi) return;
+            //recursive case
+            std::size_t p = partition(v, lo, hi, cmp);
+            //left side of partition
+            if (p > lo) quickSortImpl(v, lo, p - 1, cmp);
+            //right side of partition
+            quickSortImpl(v, p + 1, hi, cmp);
+
+        }
+        Comparator makeComparator(const std::string& key, bool descending) {
+            Comparator cmp;
+            if (key == "name") {
+                cmp = [](const Item& a, const Item& b) {
+                    return a.name < b.name;
+                    };
+            }
+            else if (key == "weight") {
+                cmp = [](const Item& a, const Item& b) {
+                    return a.weight < b.weight;
+                    };
+            }
+            else if (key == "value") {
+                cmp = [](const Item& a, const Item& b) {
+                    return a.value < b.value;
+                    };
+            }
+            else return nullptr;
+            if (descending) {
+                Comparator asc = cmp;
+                cmp = [asc](const Item& a, const Item& b) {
+                    return asc(b, a);
+                    };
+            }
+            return cmp;
+        }
     }
 
 // ---- 1. Merge sort ------------------------------------------------------
@@ -89,60 +149,22 @@ void mergeSort(std::vector<Item>& inventory, const Comparator& cmp) {
 // ---- 2. Quicksort -------------------------------------------------------
 
 void quicksort(std::vector<Item>& inventory, const Comparator& cmp) {
-    // TODO Floor 2 (Wed): implement quicksort.
-    //
-    // Think before you type:
-    //   - Quicksort's whole performance story depends on the PIVOT. If
-    //     the pivot splits the range roughly in half each time, you get
-    //     O(n log n). If the pivot always ends up at one end (everything
-    //     goes to one side), you get O(n^2). Why does the FIRST element
-    //     cause that on sorted input? Sketch it on paper for [1,2,3,4,5].
-    //   - Your fix is the MIDDLE element. It's not bulletproof — an
-    //     adversary could still construct a worst-case input — but it
-    //     kills the most common pathology (sorted / reverse-sorted data),
-    //     which is exactly the shape real users produce.
-    //   - `std::size_t` is unsigned. When `p == 0`, what is `p - 1`?
-    //     That wrap-around will send your left-side recursion to index
-    //     18 quintillion. Guard it.
-    //   - Is quicksort stable? (Answer: no — and that is why production
-    //     std::sort is ALSO not stable. If you need stability, reach for
-    //     std::stable_sort or your mergeSort.)
-    //
-    // If you need structural hints — helpers in an anonymous namespace:
-    //
-    //   static std::size_t partition  (std::vector<Item>& v,
-    //                                  std::size_t lo, std::size_t hi,
-    //                                  const Comparator& cmp);
-    //   static void        quicksortImpl(std::vector<Item>& v,
-    //                                    std::size_t lo, std::size_t hi,
-    //                                    const Comparator& cmp);
-    //
-    // Closed range convention for quicksort: [lo, hi] — both inclusive.
-    // Textbooks use this for Lomuto partition; it is fine here. Guard
-    // the recursive call `quicksortImpl(v, lo, p - 1, cmp)` with
-    // `if (p > lo) ...` so you do not underflow when p == 0.
-    //
-    // PIVOT: use the middle element — `lo + (hi - lo) / 2`. Move it to
-    //        the end (swap it with v[hi]) and then do the standard
-    //        Lomuto scan with the pivot now at v[hi].
-    //
-    // If you are curious what the FIRST-element pivot looks like: the
-    // benchmark harness has a `--bad-pivot` option that runs exactly
-    // that. You do NOT need to implement it yourself; the harness
-    // ships its own copy for Lab purposes.
-    (void)inventory;
-    (void)cmp;
+    if (inventory.size() < 2) return;
+    quickSortImpl(inventory, 0, inventory.size() - 1, cmp);
 }
 
 // ---- 3. sortInventory (the seam) ----------------------------------------
 
 bool sortInventory(Hero& hero, const std::string& criterion) {
+    std::istringstream in(criterion);
+    std::string key;
+    std::string dir;
+    in >> key >> dir;
 
-
-    (void)criterion;
-    Comparator byWeight = [](const Item& a, const Item& b) {
-        return a.weight < b.weight;};
-    mergeSort(hero.inventory, byWeight);
+    bool descending = (dir == "desc");
+    Comparator cmp = makeComparator(key, descending);
+    if (!cmp) return false;
+    std::sort(hero.inventory.begin(), hero.inventory.end(), cmp);
     return true;
 }
 

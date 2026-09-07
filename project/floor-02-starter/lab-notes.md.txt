@@ -1,0 +1,24 @@
+1. The full `benchmark sort` sweep output (paste from your terminal).
+
+  N=     10  mergeSort=   0.090 ms  quicksort=    0.061 ms  std::sort=   0.033 ms
+  N=    100  mergeSort=   1.350 ms  quicksort=    0.649 ms  std::sort=   0.340 ms
+  N=   1000  mergeSort=   8.557 ms  quicksort=    4.254 ms  std::sort=   3.297 ms
+  N=  10000  mergeSort=  92.107 ms  quicksort=   65.188 ms  std::sort=  43.100 ms
+  N= 100000  mergeSort=1182.288 ms  quicksort=  748.049 ms  std::sort= 618.182 ms
+
+2. **At what inventory size does `std::sort` clearly pull ahead** of your hand-rolled sorts? Read your table; pick a row.
+
+As earlier as the first test of N=10 you can see that the std::sort function outperforms both the mergeSort (0.09 ms) and the quicksort (0.061 ms) with a time of 0.033 ms.
+
+3. **Run with `--sorted`.** Which sort gets faster? Which gets slower? *Why?*
+
+All types got faster; mergeSorts time saved was very small going from 1182 to 1114 ms. Quicksort went form 748 to 552 ms. The biggest time saved was the std::sort going from 618 ms to 109 ms. Having a pre-sorted input leads to less iteration cycles needed. That is also why the mergeSort saw minimal impact because it follows a set amount of steps with splitting. 
+
+4. **Run `benchmark sort --sorted --bad-pivot` at N=10,000.** What does the time for `quicksort*` look like? Compare to your middle-pivot run. This is the Pivot Wraith.
+
+Quicksort was much worse in this test running for 985 ms. This is a dramatic increase from the best case of 42 ms. 
+
+5. **One-paragraph reflection.** If you could only ship one of the three sorts in production, which would you ship? Defend your choice in terms of *worst case*, *average case*, and *what the data is likely to look like*.
+
+
+The best sort option by far is the std::sort option. It is has the lowest times for both the best and worst cases, and it seems fairly consistent for its averages. Merge Sort is valuable for its low variability, but its best case doesn't ever beat the Quick Sort or std::sort. Quick Sort tends to beat out Merge Sort for most average cases, but in the worst case scenario it becomes a far worse option than Merge Sort. Regardless neither of these choices are able to compete with std::sort and this seems to be that the std::sort will adapt its method for a more optimal outcome. 
