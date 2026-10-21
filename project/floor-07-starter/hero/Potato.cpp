@@ -2,8 +2,8 @@
 // hero/Potato.cpp — body of hotPotato.  THE WORK IS HERE (Wednesday).
 
 #include "Potato.h"
-
 #include "Queue.h"
+
 
 namespace dungeon {
 
@@ -37,8 +37,24 @@ namespace dungeon {
 // surface area of this algorithm. No indexing, no random access. That
 // is what "FIFO is enough for some problems" means in code.
 
-std::string hotPotato(const std::vector<std::string>& /*names*/, std::size_t /*k*/) {
-    return "(hotPotato unimplemented)";   // TODO Wednesday
+std::string hotPotato(const std::vector<std::string>& names, std::size_t k) {
+    // check if empty
+    if (names.empty()) return "";
+
+    //create our queue
+    Queue<std::string> q;
+
+    //enqueue
+    for (const std::string& n : names) q.enqueue(n);
+
+    while (q.size() > 1) {
+        for (std::size_t i = 0; i < k - 1; ++i) {
+            q.enqueue(q.front());
+            q.dequeue();
+        }
+        q.dequeue(); //kth person who gets eliminated
+    }
+    return q.front(); //survivior
 }
 
 }  // namespace dungeon
