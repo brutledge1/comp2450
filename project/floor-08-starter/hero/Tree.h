@@ -106,8 +106,9 @@ public:
     //     parent->children.push_back(child);
     //     return child;
     Node* addChild(Node* parent, const T& value) {
-        (void)parent; (void)value;   // silence unused-parameter warnings while stubbed
-        return nullptr;              // TODO Monday
+        Node* child = new Node(value, parent); //pointer up
+        parent->children.push_back(child); //pointer down
+        return child; 
     }
 
     // Total number of nodes in the tree. Recursive: one node, plus the
@@ -157,8 +158,21 @@ public:
     //     }
     std::vector<T> levelOrder() const {
         std::vector<T> out;
-        // TODO Wednesday
-        return out;
+        if (root_ == nullptr) return out;
+        Queue<Node*> q;
+        q.enqueue(root_);
+        while (!q.empty()) {
+            // no recursion... loop until no one is left
+            Node* cur = q.front();
+            q.dequeue();
+            out.push_back(cur->data);
+            for (std::size_t i = 0; i < cur->children.size(); ++i) {
+                //children join at the BACK, behind the rest of the current level
+                // a whole level in the tree will finish before the next starts
+                q.enqueue(cur->children[i]);
+            }
+        }
+        return out; //FIFO
     }
 
     // ----- Friday ----------------------------------------------------
@@ -174,8 +188,11 @@ public:
     // TODO Floor 8 (Friday): write findFrom(root_, value) below.
     std::vector<T> lineage(const T& value) const {
         std::vector<T> path;
-        const Node* n = findFrom(root_, value);
+        visits = 0;
+        const Node* n = findFrom(root_, value); //walk down; find the node
+        std::cout << "Visited " << visits << " nodes.\n";
         if (n == nullptr) return path;          // not found → empty path
+        //walk up; follow parent pointers (set by addChild()) until we pass the root (parent == nullptr)
         for (const Node* p = n; p != nullptr; p = p->parent) path.push_back(p->data);
         std::reverse(path.begin(), path.end());  // collected leaf→root; flip it
         return path;
@@ -183,6 +200,7 @@ public:
 
 private:
     Node* root_ = nullptr;
+    inline static std::size_t visits = 0;
 
     // ===== recursive helpers — PROVIDED ==============================
 
@@ -217,8 +235,12 @@ private:
     //         total += countFrom(n->children[i]);
     //     return total;
     static std::size_t countFrom(const Node* n) {
-        (void)n;
-        return 0;   // TODO Monday
+        if (n == nullptr) return 0;
+        std::size_t total = 1;
+        for (std::size_t i = 0; i < n->children.size(); ++i) {
+            total += countFrom(n->children[i]);
+        }
+        return total; //me + everyone below me
     }
 
     // Height (in edges) of the subtree rooted at n. A null subtree and a
@@ -231,8 +253,12 @@ private:
     //         best = std::max(best, heightFrom(n->children[i]));
     //     return 1 + best;
     static std::size_t heightFrom(const Node* n) {
-        (void)n;
-        return 0;   // TODO Monday
+        if (n == nullptr || n->children.size() == 0) return 0;
+        std::size_t best = 0;
+        for (std::size_t i = 0; i < n->children.size(); ++i) {
+            best = std::max(best, heightFrom(n->children[i]));
+        }
+        return 1 + best; //+1 for the edge down to that child
     }
 
     // Append this node's data, THEN each child's subtree in order. The
@@ -244,8 +270,11 @@ private:
     //     for (std::size_t i = 0; i < n->children.size(); ++i)
     //         preOrderInto(n->children[i], out);
     static void preOrderInto(const Node* n, std::vector<T>& out) {
-        (void)n; (void)out;
-        // TODO Wednesday
+        if (n == nullptr) return;
+        out.push_back(n->data);
+        for (std::size_t i = 0; i < n->children.size(); ++i) {
+            preOrderInto(n->children[i], out);
+        }
     }
 
     // Recursive search: return the node whose data == value, or nullptr.
@@ -259,8 +288,16 @@ private:
     //         if (const Node* hit = findFrom(n->children[i], value)) return hit;
     //     return nullptr;
     static const Node* findFrom(const Node* n, const T& value) {
-        (void)n; (void)value;
-        return nullptr;   // TODO Friday
+        if (n == nullptr) return nullptr;
+        ++visits;
+        if (n->data == value) return n;
+        for (std::size_t i = 0; i < n->children.size(); ++i) {
+            //recurse: search this childs subtree on a hit, return it at once
+            if (const Node* hit = findFrom(n->children[i], value)) {
+                return hit;
+            }
+        }
+        return nullptr; //checked myself and every subtree, its not here
     }
 };
 
